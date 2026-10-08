@@ -19,15 +19,13 @@ def main() -> None:
     audio_config = AudioConfig(buffer_size=256)
 
     camera = Camera(cam_config)
-    tracker = HandTracker(tracker_config)
+    tracker = HandTracker(tracker_config, mode="hand")
     layout = DrumLayout("assets/layouts/default.json")
     audio = AudioEngine(audio_config)
-    motion_tracker = MotionTracker(min_strike_velocity=350.0, cooldown_seconds=0.12)
+    motion_tracker = MotionTracker(min_strike_velocity=220.0, cooldown_seconds=0.10)
 
     prev_time = time.perf_counter()
     fps_smoothed = 0.0
-
-    logging.info("Starting Air Drum Kit Main Application. Press 'q' to exit.")
 
     try:
         while True:
@@ -46,16 +44,17 @@ def main() -> None:
             rgb_frame = bgr_to_rgb(mirrored)
             h, w, _ = mirrored.shape
 
+            # Process full resolution frame for accuracy
             tracked_hands = tracker.process(rgb_frame)
 
-            # Decay visual highlight active state
+            # Decay pad highlight active timers
             for pad in layout.pads:
                 if pad.active_timer > 0:
                     pad.active_timer -= dt
                     if pad.active_timer <= 0:
                         pad.is_active = False
 
-            # Check velocity strikes for all tracked hands
+            # Collision and velocity strike detection
             for hand in tracked_hands:
                 tip = hand.index_tip
                 hit_pad = layout.check_collisions(tip.pixel_x, tip.pixel_y, w, h)
@@ -70,15 +69,16 @@ def main() -> None:
 
                 if strike and hit_pad:
                     hit_pad.is_active = True
-                    hit_pad.active_timer = 0.15  # Highlight pad for 150 ms
+                    hit_pad.active_timer = 0.15
                     audio.play_sound(strike.pad_id, velocity=strike.velocity)
 
             annotated_frame = layout.draw(mirrored)
             annotated_frame = tracker.draw_landmarks(annotated_frame, tracked_hands)
 
+            mode_label = tracker.mode.upper()
             cv2.putText(
                 annotated_frame,
-                f"FPS: {fps_smoothed:.1f} | Velocity Strike Mode Active",
+                f"FPS: {fps_smoothed:.1f} | MODE: {mode_label} (Press 'm' to toggle)",
                 (20, 40),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.8,
@@ -89,8 +89,13 @@ def main() -> None:
 
             cv2.imshow("Air Drum Kit - Main Application", annotated_frame)
 
-            if cv2.waitKey(1) & 0xFF == ord("q"):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
                 break
+            elif key == ord("m"):
+                tracker.mode = "stick" if tracker.mode == "hand" else "hand"
+                logging.info("Switched mode to: %s", tracker.mode.upper())
+
     finally:
         audio.close()
         tracker.close()

@@ -8,6 +8,14 @@ from airdrum.config import AudioConfig
 
 logger = logging.getLogger(__name__)
 
+# Fallback alias map to bridge layout IDs with filenames
+PAD_ALIASES = {
+    "hightom": "tom1",
+    "lowtom": "tom2",
+    "tom1": "hightom",
+    "tom2": "lowtom",
+}
+
 
 class AudioEngine:
     """Low-latency audio playback engine using Pygame mixer."""
@@ -38,7 +46,7 @@ class AudioEngine:
         self.load_sounds()
 
     def load_sounds(self) -> None:
-        """Pre-loads all WAV audio samples in the sounds directory into memory."""
+        """Pre-loads WAV audio samples in the sounds directory into memory, including alias aliases."""
         if not os.path.exists(self.sounds_dir):
             logger.warning("Sounds directory %s does not exist.", self.sounds_dir)
             return
@@ -51,16 +59,28 @@ class AudioEngine:
                     sound = pygame.mixer.Sound(filepath)
                     self.sounds[pad_id] = sound
                     logger.info("Loaded sound sample: %s -> %s", pad_id, filepath)
+
+                    # Register alias mapping (e.g. tom1 -> hightom)
+                    if pad_id in PAD_ALIASES:
+                        alias_id = PAD_ALIASES[pad_id]
+                        self.sounds[alias_id] = sound
+                        logger.info("Mapped alias sound sample: %s -> %s", alias_id, filepath)
+
                 except Exception as e:
                     logger.error("Could not load sound %s: %s", filepath, e)
 
     def play_sound(self, pad_id: str, velocity: float = 1.0) -> None:
         """Triggers audio playback for a given pad ID with volume scaled by velocity."""
-        if pad_id not in self.sounds:
+        # Fallback check if pad_id alias exists in loaded sounds
+        target_id = pad_id
+        if target_id not in self.sounds and target_id in PAD_ALIASES:
+            target_id = PAD_ALIASES[target_id]
+
+        if target_id not in self.sounds:
             logger.warning("No sound loaded for pad ID: %s", pad_id)
             return
 
-        sound = self.sounds[pad_id]
+        sound = self.sounds[target_id]
         volume = max(0.0, min(1.0, velocity))
         sound.set_volume(volume)
         sound.play()

@@ -1,7 +1,20 @@
 from dataclasses import dataclass, field
+from typing import Tuple
 import logging
 
 logger = logging.getLogger(__name__)
+
+from typing import Tuple
+
+
+@dataclass
+class HSVConfig:
+    """HSV color thresholding configuration for physical drumstick tips."""
+    # Default HSV bounds tuned for bright green tape/tips
+    lower_hsv: Tuple[int, int, int] = (35, 100, 100)
+    upper_hsv: Tuple[int, int, int] = (85, 255, 255)
+    min_area: float = 100.0  # Minimum pixel area to filter out noise
+    max_targets: int = 2     # Track up to 2 stick tips (Left / Right)
 
 
 @dataclass
