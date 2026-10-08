@@ -122,17 +122,4 @@ pytest
 
 Distributed under the MIT License. See `LICENSE` for details.
 
-```
 
----
-
-### Step-by-Step Commands to Commit & Push
-
-Run these commands in your terminal to update the README on GitHub:
-
-```bash
-git add README.md
-git commit -m "docs: overhaul README with quickstart, controls, utilities, and repo structure"
-git push origin main
-
-```
