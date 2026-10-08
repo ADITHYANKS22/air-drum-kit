@@ -1,8 +1,4 @@
-Here is a clean, production-ready `README.md` updated for your repository structure, tracking modes, calibration tools, and recent features.
 
-Replace the content of your local `README.md` with this markdown:
-
-```markdown
 # 🥁 Air Drum Kit
 
 A real-time, velocity-sensitive virtual air drum kit powered by **OpenCV**, **MediaPipe**, and **Pygame**. Play virtual drums in real time using either bare hand gesture tracking or physical drumsticks/colored markers.
