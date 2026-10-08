@@ -1,4 +1,4 @@
-Based on your VS Code sidebar, here is the updated `README.md` tree section that accurately matches all your files (including `assets/sounds`, `scripts/`, `src/airdrum/`, `tests/`, and data directories):
+
 
 # 🥁 Air Drum Kit
 
