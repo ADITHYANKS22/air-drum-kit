@@ -19,5 +19,9 @@ src/airdrum/stick_tracker.py
 src/airdrum/strike_detector.py
 src/airdrum/types.py
 src/airdrum/ui.py
+tests/test_audio_engine.py
 tests/test_config_and_types.py
+tests/test_drum_layout.py
+tests/test_hand_tracker.py
 tests/test_preprocess.py
+tests/test_stick_tracker.py
