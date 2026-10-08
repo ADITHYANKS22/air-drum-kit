@@ -1,0 +1,54 @@
+{
+  "pads": [
+    {
+      "id": "hihat",
+      "name": "Hi-Hat",
+      "x": 0.10,
+      "y": 0.55,
+      "width": 0.18,
+      "height": 0.22,
+      "color": [255, 200, 0],
+      "sound_file": "hihat.wav"
+    },
+    {
+      "id": "snare",
+      "name": "Snare",
+      "x": 0.32,
+      "y": 0.60,
+      "width": 0.20,
+      "height": 0.24,
+      "color": [0, 255, 120],
+      "sound_file": "snare.wav"
+    },
+    {
+      "id": "tom1",
+      "name": "High Tom",
+      "x": 0.35,
+      "y": 0.28,
+      "width": 0.18,
+      "height": 0.20,
+      "color": [255, 100, 100],
+      "sound_file": "tom1.wav"
+    },
+    {
+      "id": "tom2",
+      "name": "Low Tom",
+      "x": 0.57,
+      "y": 0.28,
+      "width": 0.18,
+      "height": 0.20,
+      "color": [255, 100, 200],
+      "sound_file": "tom2.wav"
+    },
+    {
+      "id": "crash",
+      "name": "Crash",
+      "x": 0.72,
+      "y": 0.55,
+      "width": 0.18,
+      "height": 0.22,
+      "color": [0, 180, 255],
+      "sound_file": "crash.wav"
+    }
+  ]
+}

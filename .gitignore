@@ -1,0 +1,14 @@
+# Python / Virtual Environment
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Pytest & IDE
+.pytest_cache/
+.vscode/
+.idea/
+.DS_Store
+
+# MediaPipe model assets (Optional: ignore if large, downloaded automatically)
+assets/models/*.task
