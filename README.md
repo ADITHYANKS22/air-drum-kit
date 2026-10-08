@@ -1,7 +1,7 @@
 
 # 🥁 Air Drum Kit
 
-A real-time, velocity-sensitive virtual air drum kit powered by **OpenCV**, **MediaPipe**, and **Pygame**. Play virtual drums in real time using either bare hand gesture tracking or physical drumsticks/colored markers.
+A real-time, velocity-sensitive virtual air drum kit powered by **OpenCV**, **MediaPipe**, and **Pygame**. Play virtual drums in real time using bare-hand gesture tracking or physical drumsticks/colored markers.
 
 ---
 
@@ -13,7 +13,7 @@ A real-time, velocity-sensitive virtual air drum kit powered by **OpenCV**, **Me
 - **Dynamic Drum Kit Layouts**: Configurable visual hit zones for High Tom, Low Tom, Snare, Hi-Hat, and Crash cymbals.
 - **Velocity-Sensitive Audio**: Low-latency audio trigger engine built on Pygame Mixer with velocity detection.
 - **HSV Calibration Utility**: Included interactive calibration script to adjust color thresholds for your environment.
-- **Layout Editor**: Interactive GUI tool to reposition and re-scale drum pads.
+- **Layout Editor & Audio Tools**: Interactive tools to reposition pads and test sound triggering.
 
 ---
 
@@ -21,24 +21,52 @@ A real-time, velocity-sensitive virtual air drum kit powered by **OpenCV**, **Me
 
 ```text
 air-drum-kit/
-├── assets/                  # Drum sound samples and kit layouts
-│   └── layouts/default.json # Pad positions and trigger thresholds
-├── scripts/
+├── assets/                  # Audio samples and layout templates
+│   ├── layouts/             # Saved drum kit JSON configurations
+│   ├── models/              # MediaPipe landmark models
+│   └── sounds/              # WAV drum audio files (crash, hihat, snare, toms)
+├── data/                    # Dataset directory
+│   └── raw/                 # Raw tracking / landmark recordings
+├── docs/                    # Technical documentation & architecture guides
+├── ml/                      # Machine learning model scripts & pipelines
+├── scripts/                 # Utility & calibration scripts
+│   ├── demo_audio.py        # Audio engine test script
+│   ├── demo_camera.py       # Camera feed test script
+│   ├── demo_drum_layout.py   # Drum layout renderer preview
+│   ├── demo_hand_tracking.py # Standalone hand tracking demo
 │   ├── demo_hsv_calibration.py # Interactive HSV color calibration tool
-│   └── demo_layout_editor.py    # Custom drum pad layout editor
+│   ├── demo_layout_editor.py # GUI tool to reposition & resize drum pads
+│   └── generate_sounds.py   # Synthetic drum WAV generator
 ├── src/
-│   └── airdrum/
-│       ├── audio_engine.py  # Pygame sound triggering logic
-│       ├── config.py        # Application configuration settings
-│       ├── hand_tracker.py  # MediaPipe & OpenCV tracking engine
-│       ├── stick_detector.py# Dedicated marker detection
-│       └── main.py          # Main application loop
-├── tests/                   # Pytest suite
-│   └── test_stick_detector.py
-├── pyproject.toml           # Project metadata & dependencies
-└── requirements.txt         # Pip dependency locks
+│   └── airdrum/             # Main application package
+│       ├── audio_engine.py  # Pygame sound triggering engine
+│       ├── camera.py        # Webcam video capture wrapper
+│       ├── config.py        # Application settings & tracking parameters
+│       ├── drum_layout.py   # Pad boundary and collision math
+│       ├── hand_tracker.py  # MediaPipe & OpenCV stick/hand tracking
+│       ├── main.py          # Main application entry point
+│       ├── ml_detector.py   # ML-based gesture detection
+│       ├── preprocessor.py  # Frame scaling & HSV filtering utilities
+│       ├── stick_detector.py# HSV stick marker tracker
+│       ├── strike_detector.py # Z-velocity strike detection engine
+│       └── utils.py         # Helper math and geometry functions
+├── tests/                   # Pytest test suite
+│   ├── test_audio_engine.py
+│   ├── test_config_and_types.py
+│   ├── test_drum_layout.py
+│   ├── test_hand_tracker.py
+│   ├── test_preprocessor.py
+│   ├── test_stick_detector.py
+│   └── test_strike_detector.py
+├── .gitignore
+├── AGENTS.md
+├── LICENSE
+├── pyproject.toml           # Project configuration & build settings
+├── pytest.ini               # Pytest runtime configuration
+├── requirements.txt         # Dependencies list
+└── setup_project.py         # Directory bootstrap setup script
 
-```
+
 
 ---
 
@@ -121,5 +149,3 @@ pytest
 ## 📜 License
 
 Distributed under the MIT License. See `LICENSE` for details.
-
-
