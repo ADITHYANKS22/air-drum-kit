@@ -6,7 +6,7 @@ This README shows how the project works, explains every important design choice,
 
 **Team:** Adithyan K S (Fezul), Ajaykrishna N, Alfred Davies, Akarsh K Bijoy
 
-**Guide:** Ms. Elsa Raju, Assistant Professor, Department of CSE
+**Guide:** Dr.Anil Antony, Associate Professor, Department of CSE
 
 **Institution:** Sahrdaya College of Engineering & Technology, Autonomous, Kodakara, Thrissur, Kerala
 
