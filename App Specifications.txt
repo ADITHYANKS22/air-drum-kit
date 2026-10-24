@@ -1,0 +1,161 @@
+================================================================================
+                    AIR DRUM KIT - APPLICATION SPECIFICATIONS
+================================================================================
+
+1. PROJECT OVERVIEW
+--------------------------------------------------------------------------------
+The Air Drum Kit is an interactive, computer-vision-powered virtual percussion
+instrument designed to run locally using a standard webcam. It tracks human hand
+gestures in mid-air, detects downward drumming strokes via kinematic velocity
+calculations, detects spatial collisions with virtual drum pads, and triggers
+low-latency polyphonic audio playback scaled by stroke velocity.
+
+
+2. TECHNICAL STACK
+--------------------------------------------------------------------------------
+* Programming Language:
+  - Python 3.10 - 3.12 (Requires Python <= 3.12 due to MediaPipe binary wheel support)
+
+* Computer Vision & Video I/O:
+  - OpenCV (opencv-python >= 4.8.0)
+  - Backend: DirectShow (CAP_DSHOW) on Windows; CAP_ANY on POSIX
+
+* Machine Learning & Hand Tracking:
+  - Google MediaPipe Tasks API (mediapipe >= 0.10.0)
+  - Vision Model: HandLandmarker with float16 quantized 'hand_landmarker.task'
+
+* Audio Engine:
+  - Pygame Community Edition (pygame-ce >= 2.5.0) mixer
+  - Low-buffer playback with 16 polyphonic channels
+
+* Numerical & Signal Processing:
+  - NumPy (numpy >= 1.24.0)
+
+* Audio Asset Generation:
+  - Python Standard Library ('wave', 'struct') + NumPy for 16-bit PCM WAV synthesis
+
+* Concurrency & State:
+  - Python standard library 'threading' (daemon capture thread + thread lock)
+  - collections.deque for temporal trajectory tracking
+
+* Packaging & Testing:
+  - setuptools (pyproject.toml)
+  - pytest (pytest >= 7.4.0)
+
+
+3. SYSTEM ARCHITECTURE & DATA PIPELINE
+--------------------------------------------------------------------------------
+1. Video Capture (camera.py):
+   - A dedicated daemon background thread continuously polls the camera.
+   - Captures frames into a thread-locked buffer to eliminate OS frame buffering lag.
+
+2. Frame Preprocessing (preprocess.py):
+   - Horizontal flip (cv2.flip) creates a natural mirror view for the user.
+   - Channel reordering from BGR to RGB for MediaPipe inference.
+
+3. Hand Landmark Tracking (hand_tracker.py):
+   - MediaPipe HandLandmarker extracts 21 3D landmarks per detected hand.
+   - Landmark 8 (INDEX_FINGER_TIP) serves as the primary drumming pointer.
+   - Landmark 0 (WRIST) serves as the anchor point.
+
+4. Kinematic Motion Tracking (stick_tracker.py):
+   - Maintains a sliding coordinate history (deque maxlen=5) per hand.
+   - Computes downward vertical velocity: vy = (y_new - y_old) / dt (px/sec).
+   - Enforces a strike threshold and cooldown window to prevent duplicate hits.
+
+5. Virtual Drum Layout & Collision (drum_layout.py):
+   - Reads normalized coordinates [0.0, 1.0] from JSON layout.
+   - Compares pixel positions of index fingertips with pad boundaries.
+   - Activates visual feedback (alpha highlight) on hit.
+
+6. Polyphonic Audio Playback (audio_engine.py):
+   - Pygame mixer pre-initialized with low buffer size.
+   - Plays corresponding sound sample with volume mapped dynamically to vy.
+
+
+4. CORE TECHNICAL SPECIFICATIONS & METRICS
+--------------------------------------------------------------------------------
+Parameter                    | Setting / Value           | Source File
+-----------------------------+---------------------------+-----------------------
+Video Resolution             | 1280 x 720 (16:9 HD)      | config.py
+Camera FPS (Requested)       | 60 FPS                    | config.py
+OpenCV Windows Backend       | cv2.CAP_DSHOW             | camera.py
+Hand Tracker Model           | hand_landmarker.task      | hand_tracker.py
+Landmark Pointer             | Landmark 8 (Index Tip)    | hand_tracker.py
+Tracking Confidence Min      | 0.70                      | config.py
+Detection Confidence Min     | 0.70                      | config.py
+Max Simultaneous Hands       | 2 (Left & Right)          | config.py
+Strike Velocity Threshold vy | 350.0 px/sec downward     | stick_tracker.py
+Velocity Mapping Range       | 350 to 1800 px/sec        | stick_tracker.py
+Volume Dynamic Range         | 0.35 to 1.0 (35% to 100%) | stick_tracker.py
+Strike Cooldown Window       | 0.12 s (120 ms) per hand  | stick_tracker.py
+Trajectory Window Size       | 5 frames                  | stick_tracker.py
+Audio Sample Rate            | 44,100 Hz (CD Quality)    | config.py
+Audio Bit Depth              | 16-bit signed (-16)       | config.py
+Audio Channels               | 2 (Stereo)                | config.py
+Audio Mixer Buffer Size      | 256 samples (~5.8 ms)     | config.py
+Polyphony Channels           | 16 concurrent channels    | config.py
+Pad Visual Highlight Decay   | 150 ms                    | main.py
+Pad Transparency (Idle)      | 35% fill opacity          | drum_layout.py
+Pad Transparency (Active)    | 65% fill opacity          | drum_layout.py
+FPS Smoothing Factor (EMA)   | alpha = 0.1               | main.py
+
+
+5. DEFAULT DRUM KIT LAYOUT (assets/layouts/default.json)
+--------------------------------------------------------------------------------
+Pad ID  | Name      | Relative X | Relative Y | Width | Height | Audio File
+--------+-----------+------------+------------+-------+--------+-------------
+hihat   | Hi-Hat    | 0.10       | 0.55       | 0.18  | 0.22   | hihat.wav
+snare   | Snare     | 0.32       | 0.60       | 0.20  | 0.24   | snare.wav
+tom1    | High Tom  | 0.35       | 0.28       | 0.18  | 0.20   | tom1.wav
+tom2    | Low Tom   | 0.57       | 0.28       | 0.18  | 0.20   | tom2.wav
+crash   | Crash     | 0.72       | 0.55       | 0.18  | 0.22   | crash.wav
+
+
+6. SYSTEM LIMITATIONS & CONSTRAINTS
+--------------------------------------------------------------------------------
+1. Hardware & Camera Constraints:
+   - Consumer Webcam FPS: Although 60 FPS is requested, most USB/laptop webcams
+     hardware-cap at 30 FPS. At 30 FPS (~33.3 ms per frame), fast drumming
+     strokes can occur within 1-2 frames, occasionally causing missed strikes.
+   - Motion Blur: Fast downward strokes cause motion blur, which can degrade
+     MediaPipe fingertip confidence below the 0.70 threshold.
+   - Lighting & Background: Poor lighting, backlighting, or skin-toned
+     backgrounds significantly degrade hand landmark accuracy.
+
+2. Spatial & Depth (2D vs 3D) Limitations:
+   - 2D Collision Plane: The collision detection evaluates 2D bounding boxes
+     (X, Y) and does not restrict hits by Z-depth. Moving hands downward within
+     a pad's (X, Y) area at any distance from the camera triggers a strike.
+   - Lack of Tactile Rebound: Without physical drumsticks and drum heads, there
+     is no haptic rebound feedback, making complex drum rolls and tight timing
+     harder to sustain.
+
+3. Tracking & Usability Constraints:
+   - Index Fingers Only: The application tracks Landmark 8 (Index Finger Tip).
+     Physical drumsticks, pencils, or other fingers are not tracked by default.
+   - No Foot Pedal Support: Standard drum sets require foot pedals for the Kick
+     Drum and Hi-Hat pedal. This application currently tracks hands only.
+   - Fixed Layout Distance: The default pad bounding boxes are static percentages
+     of the screen. The user must manually position themselves at an appropriate
+     distance for comfortable reach.
+
+4. End-to-End Latency:
+   - Audio buffer latency is low (~5.8 ms), but total latency includes:
+       Camera Capture/USB Transfer (~20-40 ms)
+     + MediaPipe ML Inference (~10-25 ms)
+     + OS Audio Output Pipeline (~10-30 ms)
+     Total Latency: ~40-95 ms, which can be noticeable for fast tempo rhythms.
+
+5. Architectural Stubs / Incomplete Modules:
+   - src/airdrum/strike_detector.py raises NotImplementedError (Phase 5 stub).
+   - src/airdrum/ml_detector.py raises NotImplementedError (Phase 7 stub).
+   - src/airdrum/ui.py raises NotImplementedError (Phase 6 stub).
+   (Note: The active application uses MotionTracker in stick_tracker.py and
+   layout.draw() in drum_layout.py directly).
+
+6. Python Compatibility:
+   - MediaPipe official wheels currently support Python 3.10 through 3.12.
+     Running on Python 3.14+ will result in installation errors unless built
+     from source.
+================================================================================
